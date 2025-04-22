@@ -1,5 +1,7 @@
 I have used Flickr8k dataset from Kaggle.
 
+Project is carried out in a virtual environment.
+
 This is the alignment of file in the folder
 
 Image-Captioning-Project/
