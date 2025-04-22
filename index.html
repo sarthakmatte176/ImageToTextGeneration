@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Captioning App</title>
+    <style>
+        /* CSS Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8fafc;
+        }
+
+        .upload-area:hover {
+            background-color: #f0f8ff;
+            border-color: #2980b9;
+        }
+
+        .upload-area p {
+            margin: 0;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .preview-area {
+            text-align: center;
+            margin: 1.5rem 0;
+            display: none;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 1.5rem 0;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .result-area {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+        }
+
+        .result-area h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        #captionText {
+            font-size: 1.2rem;
+            color: #34495e;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 6px;
+            min-height: 60px;
+        }
+
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+
+        .drag-over {
+            background-color: #e1f0fa !important;
+            border-color: #1a73e8 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image to Text Conversion</h1>
+        <div class="upload-area" id="uploadArea">
+            <input type="file" id="imageInput" accept="image/*">
+            <p>Drag & Drop an image here or click to browse</p>
+        </div>
+        <div class="preview-area" id="previewArea">
+            <img id="imagePreview" src="#" alt="Preview">
+        </div>
+        <button id="generateBtn" disabled>Generate Caption</button>
+        <div class="result-area" id="resultArea">
+            <h3>Generated Caption:</h3>
+            <p id="captionText">Caption will appear here...</p>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const imageInput = document.getElementById('imageInput');
+            const previewArea = document.getElementById('previewArea');
+            const imagePreview = document.getElementById('imagePreview');
+            const generateBtn = document.getElementById('generateBtn');
+            const captionText = document.getElementById('captionText');
+
+            // Handle drag and drop
+            ['dragover', 'dragenter'].forEach(event => {
+                uploadArea.addEventListener(event, function(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                });
+            });
+
+            ['dragleave', 'dragend', 'drop'].forEach(event => {
+                uploadArea.addEventListener(event, function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                });
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                const file = e.dataTransfer.files[0];
+                if (file) handleImageUpload(file);
+            });
+
+            // Handle click to browse
+            uploadArea.addEventListener('click', function() {
+                imageInput.click();
+            });
+
+            imageInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleImageUpload(this.files[0]);
+                }
+            });
+
+            // Handle generate button
+            generateBtn.addEventListener('click', generateCaption);
+
+            function handleImageUpload(file) {
+                if (!file.type.match('image.*')) {
+                    alert('Please upload an image file (JPEG, PNG, etc.)');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    previewArea.style.display = 'block';
+                    generateBtn.disabled = false;
+                    captionText.textContent = 'Caption will appear here...';
+                    captionText.className = '';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            function generateCaption() {
+                const file = imageInput.files[0];
+                if (!file) return;
+
+                captionText.textContent = 'Generating caption...';
+                captionText.className = 'loading';
+                generateBtn.disabled = true;
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        captionText.textContent = 'Error: ' + data.error;
+                        captionText.className = 'error';
+                    } else {
+                        captionText.textContent = data.caption;
+                        captionText.className = '';
+                    }
+                    generateBtn.disabled = false;
+                })
+                .catch(error => {
+                    captionText.textContent = 'Error: ' + error.message;
+                    captionText.className = 'error';
+                    generateBtn.disabled = false;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
