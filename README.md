@@ -2,6 +2,8 @@ I have used Flickr8k dataset from Kaggle.
 
 Project is carried out in a virtual environment.
 
+New file with extension ".h5" will be generated after training model.
+
 This is the alignment of file in the folder
 
 Image-Captioning-Project/
@@ -40,3 +42,5 @@ Image-Captioning-Project/
 ├── dataset.py
 ├── README.md
 └── requirements.txt
+
+
