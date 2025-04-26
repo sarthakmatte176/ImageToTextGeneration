@@ -6,10 +6,7 @@ def prepare_training_data(image_to_captions, word_to_index, features, max_length
     X1, X2, y = list(), list(), list()
 
     # Fix potential key mismatch (remove .jpg from keys if needed)
-    fixed_features = {}
-    for key, value in features.items():
-        fixed_key = key.split('.')[0]  # removes ".jpg"
-        fixed_features[fixed_key] = value
+    fixed_features = {key.split('.')[0]: value for key, value in features.items()}
 
     matched = 0
     missing = 0
@@ -25,10 +22,13 @@ def prepare_training_data(image_to_captions, word_to_index, features, max_length
         matched += 1
 
         for caption in captions:
-            # Fix: Handle list vs. string
+            # Handle list vs. string for captions
             words = caption if isinstance(caption, list) else caption.split()
-            seq = [word_to_index[word] for word in words if word in word_to_index]
-            
+            seq = [word_to_index.get(word, None) for word in words]  # Handle missing words explicitly
+
+            # Skip captions with unknown words
+            seq = [w for w in seq if w is not None]
+
             for i in range(1, len(seq)):
                 in_seq, out_word = seq[:i], seq[i]
                 in_seq = pad_sequences([in_seq], maxlen=max_length)[0]
@@ -54,7 +54,10 @@ def create_training_sequences(image_to_captions, word_to_index, features, max_le
 
         for caption in captions:
             words = caption if isinstance(caption, list) else caption.split()
-            seq = [word_to_index[word] for word in words if word in word_to_index]
+            seq = [word_to_index.get(word, None) for word in words]
+
+            # Skip captions with unknown words
+            seq = [w for w in seq if w is not None]
 
             for i in range(1, len(seq)):
                 in_seq, out_seq = seq[:i], seq[i]
